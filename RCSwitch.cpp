@@ -109,6 +109,25 @@ void RCSwitch::enableTransmit(int nTransmitterPin) {
 void RCSwitch::disableTransmit() {
   this->nTransmitterPin = -1;
 }
+/**
+ * Switch a remote switch on (Type D REV)
+ *
+ * @param sGroup        Code of the switch group (A,B,C,D)
+ * @param nDevice       Number of the switch itself (1..3)
+ */
+void RCSwitch::switchOn(char sGroup, int nDevice) {
+  this->sendTriState( this->getCodeWordD(sGroup, nDevice, true) );
+}
+
+/**
+ * Switch a remote switch off (Type D REV)
+ *
+ * @param sGroup        Code of the switch group (A,B,C,D)
+ * @param nDevice       Number of the switch itself (1..3)
+ */
+void RCSwitch::switchOff(char sGroup, int nDevice) {
+  this->sendTriState( this->getCodeWordD(sGroup, nDevice, false) );
+}
 
 /**
  * Switch a remote switch on (Type C Intertechno)
@@ -349,6 +368,54 @@ char* RCSwitch::getCodeWordC(char sFamily, int nGroup, int nDevice, boolean bSta
   } else {
     sReturn[nReturnPos++] = '0';
   }
+  sReturn[nReturnPos] = '\0';
+  return sReturn;
+}
+
+/**
+ * Encoding for the REV Switch Type
+ *
+ * The code word is a tristate word and with following bit pattern:
+ *
+ * +-----------------------------+-------------------+----------+--------------+
+ * | 4 bits address              | 3 bits address    | 3 bits   | 2 bits       |
+ * | switch group                | device number     | not used | on / off     |
+ * | A=1FFF B=F1FF C=FF1F D=FFF1 | 1=0FF 2=F0F 3=FF0 | 000      | on=10 off=01 |
+ * +-----------------------------+-------------------+----------+--------------+
+ *
+ * Source: http://www.the-intruder.net/funksteckdosen-von-rev-uber-arduino-ansteuern/
+ *
+ * @param sGroup        Name of the switch group (A..D, resp. a..d) 
+ * @param nDevice       Number of the switch itself (1..3)
+ * @param bStatus       Whether to switch on (true) or off (false)
+ *
+ * @return char[13], representing a tristate code word of length 12
+ */
+char* RCSwitch::getCodeWordD(char sGroup, int nDevice, bool bStatus) {
+  static char sReturn[13];
+  int nReturnPos = 0;
+
+  // sGroup must be one of the letters in "abcdABCD"
+  int nGroup = (sGroup >= 'a') ? (int)sGroup - 'a' : (int)sGroup - 'A';
+  if ( nGroup < 0 || nGroup > 3 || nDevice < 1 || nDevice > 3) {
+    return 0;
+  }
+
+  for (int i = 0; i < 4; i++) {
+    sReturn[nReturnPos++] = (nGroup == i) ? '1' : 'F';
+  }
+
+  for (int i = 1; i <= 3; i++) {
+    sReturn[nReturnPos++] = (nDevice == i) ? '1' : 'F';
+  }
+
+  sReturn[nReturnPos++] = '0';
+  sReturn[nReturnPos++] = '0';
+  sReturn[nReturnPos++] = '0';
+
+  sReturn[nReturnPos++] = bStatus ? '1' : '0';
+  sReturn[nReturnPos++] = bStatus ? '0' : '1';
+
   sReturn[nReturnPos] = '\0';
   return sReturn;
 }
