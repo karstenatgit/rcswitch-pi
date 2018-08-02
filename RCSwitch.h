@@ -45,7 +45,7 @@ typedef uint8_t byte;
 }
 #endif
 #endif
-
+    char* getCodeWordD(char group, int nDevice, bool bStatus);
 
 // Number of maximum High/Low changes per packet.
 // We can handle up to (unsigned long) => 32 bit * 2 H/L changes per bit + 2 for sync
@@ -65,6 +65,8 @@ class RCSwitch {
     void switchOff(char sFamily, int nGroup, int nDevice);
     void switchOn(char* sGroup, char* sDevice);
     void switchOff(char* sGroup, char* sDevice);
+    void switchOn(char sGroup, int nDevice);
+    void switchOff(char sGroup, int nDevice);
 
     void sendTriState(char* Code);
     void send(unsigned long Code, unsigned int length);
@@ -95,6 +97,7 @@ class RCSwitch {
     char* getCodeWordA(char* sGroup, int nSwitchNumber, boolean bStatus);
     char* getCodeWordA(char* sGroup, char* sDevice, boolean bStatus);
     char* getCodeWordC(char sFamily, int nGroup, int nDevice, boolean bStatus);
+    char* getCodeWordD(char group, int nDevice, bool bStatus);
     void sendT0();
     void sendT1();
     void sendTF();

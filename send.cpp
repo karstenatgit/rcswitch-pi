@@ -18,6 +18,8 @@ void printUsage()
 	std::cout << "    e.g. sudo ./send c 2 3 1\n";
 	std::cout << "         sudo ./send <dipSwitchGroup> <dipSwitchUnit> <command>\n";
 	std::cout << "    e.g. sudo ./send 11100 00001 1\n";
+	std::cout << "         sudo ./send <groupCode> <switchNumber> <command>\n";
+	std::cout << "    e.g. sudo ./send 'C' 3 1\n";
 	std::cout << "\n";
 	std::cout << "  Command is 0 for OFF and 1 for ON\n";
 	std::cout << "\n";
@@ -41,7 +43,7 @@ int main(int argc, char *argv[]) {
 		char* sGroup = argv[1];
 		char* sSwitch = argv[2];
 		int nSwitchNumber = atoi(argv[2]);
-
+		int nGroup = (sGroup[0] >= 'a') ? (int)sGroup[0] - 'a' : (int)sGroup[0] - 'A'; //convert a or A to 0, b or B to 1...
 		int command  = atoi(argv[3]);
 		
 		if(strlen(sGroup) > 2)
@@ -70,7 +72,27 @@ int main(int argc, char *argv[]) {
 					return -1;
 			}
 			return 0;
-		} else {
+		} else if ( nGroup >= 0 && nGroup <= 3 )
+			//Type D: REV with groups A..D and switch number 1..3 (rotary switch with 12 positions) 
+			{
+				printf("sending [Type D] groupCode[%s] switchNumber[%i] command[%i]\n", sGroup, nSwitchNumber, command);
+				switch(command) {
+					case 1:
+						mySwitch.switchOn(sGroup[0], nSwitchNumber);
+						break;
+					case 0:
+						mySwitch.switchOff(sGroup[0], nSwitchNumber);
+						break;
+					default:
+						printf("command[%i] is unsupported\n", command);
+						printUsage();
+						return -1;
+				}
+				return 0;
+			}
+
+
+		  else {
 			//Type B: Two rotary/sliding switches
 			int nGroupNumber = atoi(sGroup);
 			printf("sending [Type B] groupNumber[%i] switchNumber[%i] command[%i]\n", nGroupNumber, nSwitchNumber, command);
